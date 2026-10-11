@@ -73,7 +73,7 @@ app.get('/users-page', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'users.html'));
 });
 // Page de documentation de l'API
-app.get('/api-docs', requireAuth, (req, res) => {
+app.get('/api-docs', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'doc_api.html'));
 });
  // GET : récupérer les réservations en cours
