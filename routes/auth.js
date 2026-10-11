@@ -47,11 +47,13 @@ router.post('/login', async (req, res) => {
             }
         });
 
-    } catch (error) {
-        res.status(500).json({
-            message: 'Erreur lors de la connexion'
-        });
-    }
+        } catch (error) {
+         console.error('Erreur détaillée lors du login :', error);
+
+         res.status(500).json({
+        message: 'Erreur lors de la connexion'
+    });
+}
 });
 
 // GET : déconnexion de l'utilisateur

@@ -58,6 +58,10 @@
                     password: password
                 })
             });
+            if (response.ok) {
+            window.location.href = '/dashboard';
+            return;
+            }
 
             const data = await response.json();
 
