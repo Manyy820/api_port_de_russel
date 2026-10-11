@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation API - Port Russell</title>
+</head>
+<body>
+
+    <h1>Documentation de l'API</h1>
+
+    <p>
+        <a href="/dashboard">Retour au tableau de bord</a>
+    </p>
+
+    <hr>
+
+    <h2>API Port de Plaisance Russell</h2>
+
+    <p>
+        Cette API permet de gérer les catways,
+        les réservations et les utilisateurs
+        du port de plaisance Russell.
+    </p>
+
+    <h2>Adresse de base</h2>
+
+    <p>http://localhost:3000</p>
+
+    <h2>Authentification</h2>
+
+    <p>
+        Les routes de gestion nécessitent
+        une session utilisateur authentifiée.
+    </p>
+
+    <h2>Liste des routes</h2>
+
+    
+<div id="api-routes">
+
+    <h2>1. Gestion des catways</h2>
+
+    <p>
+        Ces routes permettent de consulter, ajouter,
+        modifier et supprimer les catways du port.
+        Une authentification est nécessaire.
+    </p>
+
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Méthode</th>
+            <th>Route</th>
+            <th>Description</th>
+        </tr>
+
+        <tr>
+            <td>GET</td>
+            <td>/catways</td>
+            <td>Récupérer tous les catways</td>
+        </tr>
+
+        <tr>
+            <td>GET</td>
+            <td>/catways/:id</td>
+            <td>Récupérer un catway par son numéro</td>
+        </tr>
+
+        <tr>
+            <td>POST</td>
+            <td>/catways</td>
+            <td>Ajouter un nouveau catway</td>
+        </tr>
+
+        <tr>
+            <td>PUT</td>
+            <td>/catways/:id</td>
+            <td>Modifier l'état d'un catway</td>
+        </tr>
+
+        <tr>
+            <td>DELETE</td>
+            <td>/catways/:id</td>
+            <td>Supprimer un catway</td>
+        </tr>
+    </table>
+
+    <h3>Exemple : ajouter un catway</h3>
+
+    <p>
+        Méthode : <strong>POST</strong>
+    </p>
+
+    <p>
+        Route : <code>/catways</code>
+    </p>
+
+    <p>Corps de la requête (JSON) :</p>
+
+    <pre>
+{
+    "catwayNumber": 25,
+    "catwayType": "long",
+    "catwayState": "Disponible"
+}
+    </pre>
+
+    <p>
+        Le type de catway doit être
+        <code>long</code> ou <code>short</code>.
+    </p>
+
+    
+<hr>
+
+<h2>2. Gestion des réservations</h2>
+
+<p>
+    Ces routes permettent de gérer les réservations
+    associées aux catways du port.
+    Une authentification est nécessaire.
+</p>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Méthode</th>
+        <th>Route</th>
+        <th>Description</th>
+    </tr>
+
+    <tr>
+        <td>GET</td>
+        <td>/catways/:id/reservations</td>
+        <td>Récupérer les réservations d'un catway</td>
+    </tr>
+
+    <tr>
+        <td>GET</td>
+        <td>/catways/:id/reservations/:idReservation</td>
+        <td>Récupérer une réservation précise</td>
+    </tr>
+
+    <tr>
+        <td>POST</td>
+        <td>/catways/:id/reservations</td>
+        <td>Créer une réservation</td>
+    </tr>
+
+    <tr>
+        <td>PUT</td>
+        <td>/catways/:id/reservations</td>
+        <td>Modifier une réservation</td>
+    </tr>
+
+    <tr>
+        <td>DELETE</td>
+        <td>/catways/:id/reservations/:idReservation</td>
+        <td>Supprimer une réservation</td>
+    </tr>
+</table>
+
+<h3>Exemple : ajouter une réservation</h3>
+
+<p>Méthode : <strong>POST</strong></p>
+
+<p>Route : <code>/catways/1/reservations</code></p>
+
+<p>Corps de la requête (JSON) :</p>
+
+<pre>
+{
+    "clientName": "Jean Dupont",
+    "boatName": "Le Neptune",
+    "startDate": "2026-11-20",
+    "endDate": "2026-11-25"
+}
+</pre>
+
+<p>
+    Le paramètre <code>:id</code> correspond
+    au numéro du catway.
+</p>
+
+<p>
+    Le paramètre <code>:idReservation</code>
+    correspond à l'identifiant MongoDB de la réservation.
+</p>
+
+<p>
+    Pour modifier une réservation avec PUT,
+    l'identifiant <code>idReservation</code>
+    doit être transmis dans le corps JSON.
+</p>
+
+
+<hr>
+
+<h2>3. Gestion des utilisateurs</h2>
+
+<p>
+    Ces routes permettent de consulter, créer,
+    modifier et supprimer les utilisateurs.
+    Une authentification est nécessaire.
+</p>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Méthode</th>
+        <th>Route</th>
+        <th>Description</th>
+    </tr>
+
+    <tr>
+        <td>GET</td>
+        <td>/users</td>
+        <td>Récupérer tous les utilisateurs</td>
+    </tr>
+
+    <tr>
+        <td>GET</td>
+        <td>/users/:email</td>
+        <td>Récupérer un utilisateur par son e-mail</td>
+    </tr>
+
+    <tr>
+        <td>POST</td>
+        <td>/users</td>
+        <td>Créer un utilisateur</td>
+    </tr>
+
+    <tr>
+        <td>PUT</td>
+        <td>/users/:email</td>
+        <td>Modifier un utilisateur</td>
+    </tr>
+
+    <tr>
+        <td>DELETE</td>
+        <td>/users/:email</td>
+        <td>Supprimer un utilisateur</td>
+    </tr>
+</table>
+
+<h3>Exemple : ajouter un utilisateur</h3>
+
+<p>Méthode : <strong>POST</strong></p>
+
+<p>Route : <code>/users</code></p>
+
+<p>Corps de la requête (JSON) :</p>
+
+<pre>
+{
+    "username": "Jean Dupont",
+    "email": "jean@example.com",
+    "password": "MotDePasse123!"
+}
+</pre>
+
+<p>
+    Le mot de passe doit contenir au minimum
+    8 caractères.
+</p>
+
+<p>
+    Les mots de passe sont hachés avec bcrypt
+    avant leur enregistrement dans MongoDB.
+</p>
+
+<p>
+    Le paramètre <code>:email</code>
+    correspond à l'adresse e-mail de l'utilisateur.
+</p>
+
+
+<hr>
+
+<h2>4. Authentification</h2>
+
+<p>
+    L'API utilise express-session pour gérer
+    les sessions des utilisateurs.
+</p>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Méthode</th>
+        <th>Route</th>
+        <th>Description</th>
+    </tr>
+
+    <tr>
+        <td>POST</td>
+        <td>/login</td>
+        <td>Connecter un utilisateur</td>
+    </tr>
+
+    <tr>
+        <td>GET</td>
+        <td>/logout</td>
+        <td>Déconnecter un utilisateur</td>
+    </tr>
+
+    <tr>
+        <td>GET</td>
+        <td>/me</td>
+        <td>Récupérer les informations de l'utilisateur connecté</td>
+    </tr>
+</table>
+
+<h3>Exemple : connexion</h3>
+
+<p>Méthode : <strong>POST</strong></p>
+
+<p>Route : <code>/login</code></p>
+
+<p>Corps de la requête (JSON) :</p>
+
+<pre>
+{
+    "email": "admin@russell.fr",
+    "password": "VOTRE_MOT_DE_PASSE"
+}
+</pre>
+
+<p>
+    Si les identifiants sont corrects,
+    une session utilisateur est créée.
+</p>
+
+<h3>Déconnexion</h3>
+
+<p>
+    La route <code>GET /logout</code>
+    détruit la session de l'utilisateur.
+</p>
+
+<h3>Protection des routes</h3>
+
+<p>
+    Les routes de gestion des catways,
+    réservations et utilisateurs sont protégées
+    par le middleware <code>requireAuth</code>.
+</p>
+
+<p>
+    Si un utilisateur non connecté tente
+    d'accéder à une route protégée,
+    l'API renvoie une erreur HTTP 401.
+</p>
+
+</div>
+
+
+</body>
+</html>

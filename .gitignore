@@ -1,0 +1,16 @@
+# Dépendances Node.js
+node_modules/
+
+# Variables d'environnement
+.env
+.env.*
+
+# Conserver un éventuel modèle de configuration
+!.env.example
+
+# Fichiers de logs
+*.log
+
+# Fichiers système
+.DS_Store
+Thumbs.db

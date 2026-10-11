@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des utilisateurs - Port Russell</title>
+</head>
+<body>
+
+    <h1>Gestion des utilisateurs</h1>
+
+    <p>
+        <a href="/dashboard">Retour au tableau de bord</a>
+    </p>
+
+    <hr>
+
+    <h2>Liste des utilisateurs</h2>
+
+    <div id="users">
+        <p>Chargement des utilisateurs...</p>
+    </div>
+
+    <hr>
+
+    <h2>Ajouter un utilisateur</h2>
+
+    <form id="addUserForm">
+
+        <label for="username">Nom d'utilisateur :</label>
+        <input type="text" id="username" required>
+
+        <br><br>
+
+        <label for="email">Adresse e-mail :</label>
+        <input type="email" id="email" required>
+
+        <br><br>
+
+        <label for="password">Mot de passe :</label>
+        <input type="password" id="password" minlength="8" required>
+
+        <br><br>
+
+        <button type="submit">Ajouter l'utilisateur</button>
+
+    </form>
+
+    <p id="message"></p>
+
+<script>
+    // Charger les utilisateurs depuis MongoDB
+    let currentUserEmail = null
+    async function loadUsers() {
+        const container = document.getElementById('users');
+        const meResponse = await fetch('/me');
+
+        if (meResponse.ok) {
+            const me = await meResponse.json();
+            currentUserEmail = me.email;
+        }
+
+        try {
+            const response = await fetch('/users');
+
+            // Vérifier si l'utilisateur est connecté
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error('Erreur lors du chargement des utilisateurs');
+            }
+
+            const users = await response.json();
+
+            // Si aucun utilisateur n'existe
+            if (users.length === 0) {
+                container.textContent = 'Aucun utilisateur disponible.';
+                return;
+            }
+
+            // Créer le tableau
+            const table = document.createElement('table');
+            table.border = '1';
+
+            // Ajouter les en-têtes
+            const header = table.insertRow();
+
+            ['Nom d’utilisateur', 'Adresse e-mail', 'Actions'].forEach(title => {
+                const cell = document.createElement('th');
+                cell.textContent = title;
+                header.appendChild(cell);
+            });
+            
+users.forEach(user => {
+    const row = table.insertRow();
+
+    [user.username, user.email].forEach(value => {
+        const cell = row.insertCell();
+        cell.textContent = value;
+    });
+
+    // Créer la colonne Actions
+    const actionCell = row.insertCell();
+
+    // Créer le bouton Modifier
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Modifier';
+    
+editButton.addEventListener('click', async () => {
+
+    // Demander le nouveau nom
+    const newUsername = prompt(
+        'Nouveau nom de l’utilisateur :',
+        user.username
+    );
+
+    // Si l'utilisateur annule
+    if (newUsername === null) {
+        return;
+    }
+
+    // Empêcher un nom vide
+    if (newUsername.trim() === '') {
+        alert('Le nom ne peut pas être vide.');
+        return;
+    }
+
+    try {
+        // Envoyer la modification à notre API
+        const response = await fetch(
+            '/users/' + encodeURIComponent(user.email),
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: newUsername.trim()
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Impossible de modifier l’utilisateur');
+        }
+
+        alert('Utilisateur modifié avec succès !');
+
+        // Actualiser le tableau
+        loadUsers();
+
+    } catch (error) {
+        alert('Erreur lors de la modification de l’utilisateur.');
+        console.error(error);
+    }
+});
+
+    // Ajouter le bouton au tableau
+    actionCell.appendChild(editButton);
+    
+// ===== BOUTON SUPPRIMER =====
+
+const deleteButton = document.createElement('button');
+deleteButton.textContent = 'Supprimer';
+deleteButton.style.marginLeft = '10px';
+
+// Empêcher la suppression du compte connecté
+if (user.email === currentUserEmail) {
+    deleteButton.disabled = true;
+    deleteButton.title = 'Impossible de supprimer votre propre compte';
+}
+
+deleteButton.addEventListener('click', async () => {
+
+    const confirmation = confirm(
+        'Voulez-vous vraiment supprimer l’utilisateur ' +
+        user.username + ' ?'
+    );
+
+    if (!confirmation) return;
+
+    try {
+        const response = await fetch(
+            '/users/' + encodeURIComponent(user.email),
+            {
+                method: 'DELETE'
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Impossible de supprimer l’utilisateur');
+        }
+
+        alert('Utilisateur supprimé avec succès !');
+
+        loadUsers();
+
+    } catch (error) {
+        alert('Erreur lors de la suppression de l’utilisateur.');
+        console.error(error);
+    }
+});
+
+actionCell.appendChild(deleteButton);
+
+});
+
+            // Afficher le tableau
+            container.replaceChildren(table);
+
+        } catch (error) {
+            container.textContent = 'Impossible de charger les utilisateurs.';
+            console.error(error);
+        }
+    }
+
+    // Charger les utilisateurs à l'ouverture de la page
+    loadUsers();
+    
+// Récupérer le formulaire
+const addUserForm = document.getElementById('addUserForm');
+
+// Détecter l'envoi du formulaire
+addUserForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    // Récupérer les informations saisies
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const message = document.getElementById('message');
+
+    try {
+        // Envoyer les informations à notre API
+        const response = await fetch('/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username,
+                email,
+                password
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            message.textContent = 'Utilisateur ajouté avec succès !';
+            message.style.color = 'green';
+
+            // Vider le formulaire
+            addUserForm.reset();
+
+            // Actualiser la liste
+            loadUsers();
+
+        } else {
+            message.textContent = data.message || 'Erreur lors de l’ajout.';
+            message.style.color = 'red';
+        }
+
+    } catch (error) {
+        message.textContent = 'Erreur de connexion au serveur.';
+        message.style.color = 'red';
+        console.error(error);
+    }
+});
+
+</script>
+</body>
+</html>

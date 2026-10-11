@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des réservations - Port Russell</title>
+</head>
+<body>
+
+    <h1>Gestion des réservations</h1>
+
+    <p>
+        <a href="/dashboard">Retour au tableau de bord</a>
+    </p>
+
+    <hr>
+
+    <h2>Liste des réservations</h2>
+
+    <div id="reservations">
+        <p>Chargement des réservations...</p>
+    </div>
+
+    <hr>
+
+    <h2>Ajouter une réservation</h2>
+
+    <form id="addReservationForm">
+
+        <label for="catwayNumber">Numéro du catway :</label>
+        <input type="number" id="catwayNumber" required>
+
+        <br><br>
+
+        <label for="clientName">Nom du client :</label>
+        <input type="text" id="clientName" required>
+
+        <br><br>
+
+        <label for="boatName">Nom du bateau :</label>
+        <input type="text" id="boatName" required>
+
+        <br><br>
+
+        <label for="startDate">Date de début :</label>
+        <input type="date" id="startDate" required>
+
+        <br><br>
+
+        <label for="endDate">Date de fin :</label>
+        <input type="date" id="endDate" required>
+
+        <br><br>
+
+        <button type="submit">Ajouter la réservation</button>
+
+    </form>
+
+    <p id="message"></p>
+
+<script>
+    // Charger toutes les réservations
+    async function loadReservations() {
+        const container = document.getElementById('reservations');
+
+        try {
+            // Récupérer la liste des catways
+            const catwaysResponse = await fetch('/catways');
+
+            if (catwaysResponse.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (!catwaysResponse.ok) {
+                throw new Error('Impossible de récupérer les catways');
+            }
+
+            const catways = await catwaysResponse.json();
+
+            // Récupérer les réservations de chaque catway
+            const results = await Promise.all(
+                catways.map(async (catway) => {
+                    const response = await fetch(
+                        '/catways/' + catway.catwayNumber + '/reservations'
+                    );
+
+                    if (!response.ok) {
+                        throw new Error('Erreur lors du chargement des réservations');
+                    }
+
+                    return response.json();
+                })
+            );
+
+            // Regrouper toutes les réservations
+            const reservations = results.flat();
+
+            if (reservations.length === 0) {
+                container.textContent = 'Aucune réservation disponible.';
+                return;
+            }
+
+            // Créer le tableau
+            const table = document.createElement('table');
+            table.border = '1';
+
+            const header = table.insertRow();
+
+            ['Catway', 'Client', 'Bateau', 'Début', 'Fin', 'Actions'].forEach(title => {
+                const cell = document.createElement('th');
+                cell.textContent = title;
+                header.appendChild(cell);
+            });
+
+            // Ajouter les réservations au tableau
+            reservations.forEach(reservation => {
+                const row = table.insertRow();
+
+                [
+                    reservation.catwayNumber,
+                    reservation.clientName,
+                    reservation.boatName,
+                    new Date(reservation.startDate).toLocaleDateString('fr-FR'),
+                    new Date(reservation.endDate).toLocaleDateString('fr-FR')
+                ].forEach(value => {
+                    const cell = row.insertCell();
+                    cell.textContent = value;
+                });
+                
+            // Ajouter une colonne pour les actions
+            const actionCell = row.insertCell();
+
+            // Créer le bouton Modifier
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Modifier';
+                
+editButton.addEventListener('click', async () => {
+
+    // Demander les nouvelles informations
+    const newClientName = prompt(
+        'Nom du client :',
+        reservation.clientName
+    );
+
+    if (newClientName === null) return;
+
+    const newBoatName = prompt(
+        'Nom du bateau :',
+        reservation.boatName
+    );
+
+    if (newBoatName === null) return;
+
+    // Empêcher les champs vides
+    if (newClientName.trim() === '' || newBoatName.trim() === '') {
+        alert('Les champs ne peuvent pas être vides.');
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            '/catways/' + reservation.catwayNumber + '/reservations',
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    idReservation: reservation._id,
+                    clientName: newClientName.trim(),
+                    boatName: newBoatName.trim()
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Impossible de modifier la réservation');
+        }
+
+        alert('Réservation modifiée avec succès !');
+
+        // Actualiser le tableau
+        loadReservations();
+
+    } catch (error) {
+        alert('Erreur lors de la modification de la réservation.');
+        console.error(error);
+    }
+});
+
+            // Ajouter le bouton dans la colonne
+            actionCell.appendChild(editButton);
+
+ // ===== BOUTON SUPPRIMER =====
+
+const deleteButton = document.createElement('button');
+deleteButton.textContent = 'Supprimer';
+deleteButton.style.marginLeft = '10px';
+
+deleteButton.addEventListener('click', async () => {
+
+    const confirmation = confirm(
+        'Voulez-vous vraiment supprimer la réservation de ' +
+        reservation.clientName + ' ?'
+    );
+
+    // Si l'utilisateur annule
+    if (!confirmation) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            '/catways/' + reservation.catwayNumber +
+            '/reservations/' + reservation._id,
+            {
+                method: 'DELETE'
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Impossible de supprimer la réservation');
+        }
+
+        alert('Réservation supprimée avec succès !');
+
+        // Actualiser le tableau
+        loadReservations();
+
+    } catch (error) {
+        alert('Erreur lors de la suppression de la réservation.');
+        console.error(error);
+    }
+});
+
+actionCell.appendChild(deleteButton);
+});
+
+            // Afficher le tableau
+            container.replaceChildren(table);
+
+        } catch (error) {
+            container.textContent = 'Impossible de charger les réservations.';
+            console.error(error);
+        }
+    }
+
+    // Charger les réservations à l'ouverture de la page
+    loadReservations();
+    
+// Récupérer le formulaire d'ajout
+const addReservationForm = document.getElementById('addReservationForm');
+
+// Détecter l'envoi du formulaire
+addReservationForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    // Récupérer les valeurs saisies
+    const catwayNumber = Number(document.getElementById('catwayNumber').value);
+    const clientName = document.getElementById('clientName').value.trim();
+    const boatName = document.getElementById('boatName').value.trim();
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    const message = document.getElementById('message');
+
+    // Vérifier les dates
+    if (endDate < startDate) {
+        message.textContent = 'La date de fin doit être après la date de début.';
+        message.style.color = 'red';
+        return;
+    }
+
+    try {
+        // Envoyer la réservation à notre API
+        const response = await fetch(
+            '/catways/' + catwayNumber + '/reservations',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    clientName,
+                    boatName,
+                    startDate,
+                    endDate
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+            message.textContent = 'Réservation ajoutée avec succès !';
+            message.style.color = 'green';
+
+            // Réinitialiser le formulaire
+            addReservationForm.reset();
+
+            // Actualiser le tableau
+            loadReservations();
+
+        } else {
+            message.textContent = data.message || 'Erreur lors de l’ajout.';
+            message.style.color = 'red';
+        }
+
+    } catch (error) {
+        message.textContent = 'Erreur de connexion au serveur.';
+        message.style.color = 'red';
+        console.error(error);
+    }
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - Port Russell</title>
+</head>
+<body>
+
+    <h1>Tableau de bord - Port de plaisance Russell</h1>
+
+    <h2>Bienvenue sur votre espace administrateur</h2>
+
+    <p>Utilisateur : <span id="username"></span></p>
+    <p>Email : <span id="email"></span></p>
+    <p>Date du jour : <span id="date"></span></p>
+
+    <hr>
+
+    <h2>Réservations en cours</h2>
+    <div id="reservations">
+        <p>Chargement des réservations...</p>
+    </div>
+
+    <hr>
+
+    <h2>Gestion du port</h2>
+
+    <ul>
+        <li><a href="/catways-page">Gérer les catways</a></li>
+        <li><a href="/reservations-page">Gérer les réservations</a></li>
+        <li><a href="/users-page">Gérer les utilisateurs</a></li>
+        <li><a href="/api-docs">Documentation API</a></li>
+        <li><a href="/logout">Se déconnecter</a></li>
+    </ul>
+
+<script>
+    // Afficher la date du jour
+    const today = new Date();
+
+    document.getElementById('date').textContent =
+        today.toLocaleDateString('fr-FR');
+
+    // Récupérer les informations de l'utilisateur connecté
+    async function loadUser() {
+        try {
+            const response = await fetch('/me');
+
+            // Si l'utilisateur n'est plus connecté
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error('Impossible de récupérer le profil');
+            }
+
+            const user = await response.json();
+
+            // Afficher les informations
+            document.getElementById('username').textContent = user.username;
+            document.getElementById('email').textContent = user.email;
+
+        } catch (error) {
+            console.error('Erreur :', error);
+        }
+    }
+
+    // Exécuter la fonction au chargement de la page
+    loadUser();
+    
+// Charger les réservations en cours
+async function loadReservations() {
+    const container = document.getElementById('reservations');
+
+    try {
+        const response = await fetch('/reservations/current');
+
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Erreur lors du chargement');
+        }
+
+        const reservations = await response.json();
+
+        // Aucune réservation en cours
+        if (reservations.length === 0) {
+            container.textContent = 'Aucune réservation en cours.';
+            return;
+        }
+
+        // Créer le tableau
+        const table = document.createElement('table');
+        table.border = '1';
+
+        const header = table.insertRow();
+        ['Catway', 'Client', 'Bateau', 'Début', 'Fin'].forEach(title => {
+            const cell = document.createElement('th');
+            cell.textContent = title;
+            header.appendChild(cell);
+        });
+
+        // Ajouter les réservations
+        reservations.forEach(reservation => {
+            const row = table.insertRow();
+
+            [
+                reservation.catwayNumber,
+                reservation.clientName,
+                reservation.boatName,
+                new Date(reservation.startDate).toLocaleDateString('fr-FR'),
+                new Date(reservation.endDate).toLocaleDateString('fr-FR')
+            ].forEach(value => {
+                const cell = row.insertCell();
+                cell.textContent = value;
+            });
+        });
+
+        container.replaceChildren(table);
+
+    } catch (error) {
+        container.textContent = 'Impossible de charger les réservations.';
+        console.error(error);
+    }
+}
+
+// Charger les réservations au démarrage
+loadReservations();
+
+</script>
+</body>
+</html>
