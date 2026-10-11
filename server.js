@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const userRoutes = require('./routes/users');
 const session = require('express-session');
+const { MongoStore } = require('connect-mongo');
 const authRoutes = require('./routes/auth');
 const requireAuth = require('./middlewares/auth');
 const path = require('path');
@@ -15,17 +16,33 @@ const Reservation = require('./models/reservation.js');
 
 // Permet de lire les données envoyées en JSON
 app.use(express.json());
+// Faire confiance au proxy HTTPS de l'hébergeur
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
+
+    // Enregistrer les sessions dans MongoDB Atlas
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        dbName: 'port_russell',
+        collectionName: 'sessions',
+        ttl: 24 * 60 * 60
+    }),
+
     resave: false,
     saveUninitialized: false,
+
     cookie: {
         httpOnly: true,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 60 * 24
+        maxAge: 86400000
     }
 }));
+
 
 app.use('/', authRoutes);
 
